@@ -1,16 +1,17 @@
 """
 opera-rtc-s1-browse processing
 """
-
 import argparse
 import logging
 from pathlib import Path
 from typing import Optional, Tuple
 
 import asf_search
+import morecantile
 import numpy as np
 from hyp3lib.aws import upload_file_to_s3
 from osgeo import gdal
+from rio_tiler.io import Reader
 
 from opera_rtc_s1_browse.auth import get_earthdata_credentials
 
@@ -153,6 +154,37 @@ def create_browse_image(co_pol_path: Path, cross_pol_path: Path, working_dir: Pa
     return browse_path
 
 
+def tile_browse(browse_path: Path, zoom_level: int = 8):
+    """Tile a browse image to fit with WebMercator TileMatrixSet
+
+    Args:
+        browse_path: Path to the browse image.
+        zoom_level: The zoom level to tile the image to.
+
+    Returns:
+        List of paths to the tiled browse images.
+    """
+    if zoom_level > 11:
+        raise ValueError('Zoom level must be less than or equal to 11.')
+
+    dir = browse_path.parent
+    base_name = browse_path.with_suffix('').name
+    tms = morecantile.tms.get('WGS1984Quad')
+    
+    tilesize = 256 * (2**(11-zoom_level))
+    tile_paths = []
+    with Reader(browse_path, tms=tms) as browse:
+        tile_covers = list(tms.tiles(*browse.geographic_bounds, zooms=zoom_level))
+        for tile_cover in tile_covers:
+            tile = browse.tile(tile_cover.x, tile_cover.y, tile_cover.z, tilesize=tilesize)
+            tile_path = dir / f'{base_name}_wgs1984quad_x{tile_cover.x}y{tile_cover.y}.tif'
+            with open(tile_path, 'wb') as f:
+                f.write(tile.render(img_format='GTiff', add_mask=True, compress='DEFLATE'))
+            tile_paths.append(tile_path)
+
+    return tile_paths
+
+
 def create_browse_and_upload(
     granule: str,
     bucket: str = None,
@@ -172,8 +204,9 @@ def create_browse_and_upload(
 
     co_pol_path, cross_pol_path = download_data(granule, working_dir)
     browse_path = create_browse_image(co_pol_path, cross_pol_path, working_dir)
-    co_pol_path.unlink()
-    cross_pol_path.unlink()
+    tile_browse(browse_path)
+    # co_pol_path.unlink()
+    # cross_pol_path.unlink()
 
     if bucket:
         upload_file_to_s3(browse_path, bucket, bucket_prefix)

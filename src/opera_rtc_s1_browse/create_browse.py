@@ -159,6 +159,20 @@ def create_browse_image(co_pol_path: Path, cross_pol_path: Path, working_dir: Pa
     return browse_path
 
 
+def remove_empty_tiles(tile_paths):
+    valid_tile_paths = []
+    for tile_path in tile_paths:
+        ds = gdal.Open(str(tile_path))
+        nodata_mask = ds.GetRasterBand(4).ReadAsArray()
+        ds = None
+        if np.all(nodata_mask == 0):
+            tile_path.unlink()
+        else:
+            valid_tile_paths.append(tile_path)
+
+    return valid_tile_paths
+
+
 def tile_browse(browse_path: Path, zoom_level: int = 8):
     """Tile a browse image to fit the WGS1984Quad TileMatrixSet.
     Output resolution will always be 0.000274658203125 degrees/pixel
@@ -188,6 +202,8 @@ def tile_browse(browse_path: Path, zoom_level: int = 8):
             with open(tile_path, 'wb') as f:
                 f.write(tile.render(img_format='GTiff', add_mask=True, compress='LZW', tiled='YES'))
             tile_paths.append(tile_path)
+
+    tile_paths = remove_empty_tiles(tile_paths)
 
     return tile_paths
 

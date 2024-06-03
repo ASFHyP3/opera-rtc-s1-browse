@@ -234,7 +234,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--bucket', help='AWS S3 bucket for uploading the final product')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix for product')
-    parser.add_argument('--output-dir', type=Path, default=Path.cwd(), help='Output directory for products.')
+    parser.add_argument('--working-dir', type=Path, default=Path.cwd(), help='Directory where products are created.')
     parser.add_argument('--keep-intermediates', action='store_true', help='Keep intermediate files after processing')
     parser.add_argument('granule', type=str, help='OPERA S1 RTC granule to create a browse image for.')
     args = parser.parse_args()

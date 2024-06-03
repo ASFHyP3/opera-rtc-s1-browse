@@ -110,7 +110,7 @@ def create_browse_array(co_pol_array: np.ndarray, cross_pol_array: np.ndarray) -
     return browse_image
 
 
-def create_browse_image(co_pol_path: Path, cross_pol_path: Path, working_dir: Path, warp=False) -> Path:
+def create_browse_image(co_pol_path: Path, cross_pol_path: Path, working_dir: Path, warp=True) -> Path:
     """Create a browse image for an OPERA S1 RTC granule meeting GIBS requirements.
 
     Args:
@@ -181,7 +181,7 @@ def tile_browse(browse_path: Path, zoom_level: int = 8):
     tilesize = 320 * (2 ** (11 - zoom_level))
     tile_paths = []
     with Reader(browse_path, tms=tms) as browse:
-        tile_covers = list(tms.tiles(*browse.geographic_bounds, zooms=zoom_level))
+        tile_covers = list(tms.tiles(*browse.geographic_bounds, zooms=zoom_level, truncate=True))
         for tile_cover in tile_covers:
             tile = browse.tile(tile_cover.x, tile_cover.y, tile_cover.z, tilesize=tilesize)
             tile_path = dir / f'{base_name}_wgs1984quad_x{tile_cover.x}y{tile_cover.y}z{tile_cover.z}.tif'
@@ -235,7 +235,7 @@ def main():
     parser.add_argument('--bucket', help='AWS S3 bucket for uploading the final product')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix for product')
     parser.add_argument('--working-dir', type=Path, default=Path.cwd(), help='Directory where products are created.')
-    parser.add_argument('--keep-intermediates', action='store_true', help='Keep intermediate files after processing')
+    parser.add_argument('--keep-intermediates', action='store_false', help='Keep intermediate files after processing')
     parser.add_argument('granule', type=str, help='OPERA S1 RTC granule to create a browse image for.')
     args = parser.parse_args()
 

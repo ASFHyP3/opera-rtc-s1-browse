@@ -188,7 +188,7 @@ def tile_browse(browse_path: Path, zoom_level: int = 8):
     if zoom_level > 11:
         raise ValueError('Zoom level must be less than or equal to 11.')
 
-    dir = browse_path.parent
+    parent_dir = browse_path.parent
     base_name = browse_path.with_suffix('').name
     tms = morecantile.tms.get('WGS1984Quad')
 
@@ -198,7 +198,7 @@ def tile_browse(browse_path: Path, zoom_level: int = 8):
         tile_covers = list(tms.tiles(*browse.geographic_bounds, zooms=zoom_level, truncate=True))
         for tile_cover in tile_covers:
             tile = browse.tile(tile_cover.x, tile_cover.y, tile_cover.z, tilesize=tilesize)
-            tile_path = dir / f'{base_name}_wgs1984quad_x{tile_cover.x}y{tile_cover.y}z{tile_cover.z}.tif'
+            tile_path = parent_dir / f'{base_name}_wgs1984quad_x{tile_cover.x}y{tile_cover.y}z{tile_cover.z}.tif'
             with open(tile_path, 'wb') as f:
                 f.write(tile.render(img_format='GTiff', add_mask=True, compress='LZW', tiled='YES'))
             tile_paths.append(tile_path)

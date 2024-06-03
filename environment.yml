@@ -6,6 +6,8 @@ dependencies:
   - python>=3.8
   - asf_search
   - gdal
+  - morecantile
+  - rio-tiler
   - pip
   # For packaging, and testing
   - flake8

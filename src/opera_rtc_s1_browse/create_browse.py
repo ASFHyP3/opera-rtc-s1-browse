@@ -1,16 +1,18 @@
 """
 opera-rtc-s1-browse processing
 """
-
 import argparse
 import logging
+import shutil
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Iterable, Optional, Tuple
 
 import asf_search
+import morecantile
 import numpy as np
 from hyp3lib.aws import upload_file_to_s3
 from osgeo import gdal
+from rio_tiler.io import Reader
 
 from opera_rtc_s1_browse.auth import get_earthdata_credentials
 
@@ -108,13 +110,14 @@ def create_browse_array(co_pol_array: np.ndarray, cross_pol_array: np.ndarray) -
     return browse_image
 
 
-def create_browse_image(co_pol_path: Path, cross_pol_path: Path, working_dir: Path) -> Path:
+def create_browse_image(co_pol_path: Path, cross_pol_path: Path, working_dir: Path, warp=True) -> Path:
     """Create a browse image for an OPERA S1 RTC granule meeting GIBS requirements.
 
     Args:
         co_pol_path: Path to the co-pol image.
         cross_pol_path: Path to the cross-pol image.
         working_dir: Working directory to store intermediate files.
+        warp: Warp the browse image to correct projection and resolution for GIBS.
 
     Returns:
         Path to the created browse image.
@@ -127,9 +130,9 @@ def create_browse_image(co_pol_path: Path, cross_pol_path: Path, working_dir: Pa
 
     browse_array = create_browse_array(co_pol, cross_pol)
 
-    tmp_browse_path = working_dir / 'tmp.tif'
+    browse_path = working_dir / f'{co_pol_path.stem[:-3]}_rgb.tif'
     driver = gdal.GetDriverByName('GTiff')
-    browse_ds = driver.Create(str(tmp_browse_path), browse_array.shape[1], browse_array.shape[0], 4, gdal.GDT_Byte)
+    browse_ds = driver.Create(str(browse_path), browse_array.shape[1], browse_array.shape[0], 4, gdal.GDT_Byte)
     browse_ds.SetGeoTransform(co_pol_ds.GetGeoTransform())
     browse_ds.SetProjection(co_pol_ds.GetProjection())
     for i in range(4):
@@ -139,25 +142,87 @@ def create_browse_image(co_pol_path: Path, cross_pol_path: Path, working_dir: Pa
     cross_pol_ds = None
     browse_ds = None
 
-    browse_path = working_dir / f'{co_pol_path.stem[:-3]}_rgb.tif'
-    gdal.Warp(
-        browse_path,
-        tmp_browse_path,
-        dstSRS='+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs',
-        xRes=2.74658203125e-4,
-        yRes=2.74658203125e-4,
-        format='GTiff',
-        creationOptions=['COMPRESS=LZW', 'TILED=YES'],
-    )
-    tmp_browse_path.unlink()
+    if warp:
+        tmp_browse_path = working_dir / 'tmp.tif'
+        shutil.copy(browse_path, tmp_browse_path)
+        gdal.Warp(
+            browse_path,
+            tmp_browse_path,
+            dstSRS='+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs',
+            xRes=2.74658203125e-4,
+            yRes=2.74658203125e-4,
+            format='GTiff',
+            creationOptions=['COMPRESS=LZW', 'TILED=YES'],
+        )
+        tmp_browse_path.unlink()
+
     return browse_path
+
+
+def remove_empty_tiles(tile_paths: Iterable[Path]):
+    """Delete tiles that are entirely nodata.
+
+    Args:
+        tile_paths: List of paths to the tiles.
+
+    Returns:
+        List of paths to the valid tiles.
+    """
+    valid_tile_paths = []
+    for tile_path in tile_paths:
+        ds = gdal.Open(str(tile_path))
+        nodata_mask = ds.GetRasterBand(4).ReadAsArray()
+        ds = None
+        if np.all(nodata_mask == 0):
+            tile_path.unlink()
+        else:
+            valid_tile_paths.append(tile_path)
+
+    return valid_tile_paths
+
+
+def tile_browse_image_wgs84(browse_path: Path, zoom_level: int = 8):
+    """Tile a browse image to fit the WGS1984Quad TileMatrixSet.
+    Output resolution will always be 0.000274658203125 degrees/pixel
+    regardless of the zoom level.
+
+    Args:
+        browse_path: Path to the browse image.
+        zoom_level: The zoom level to tile the image to.
+
+    Returns:
+        List of paths to the tiled browse images.
+    """
+    if zoom_level > 11:
+        raise ValueError('Zoom level must be less than or equal to 11.')
+
+    parent_dir = browse_path.parent
+    base_name = browse_path.with_suffix('').name
+    tms = morecantile.tms.get('WGS1984Quad')
+
+    tilesize = 320 * (2 ** (11 - zoom_level))
+    tile_paths = []
+    with Reader(browse_path, tms=tms) as browse:
+        tile_covers = list(tms.tiles(*browse.geographic_bounds, zooms=zoom_level, truncate=True))
+        for tile_cover in tile_covers:
+            tile = browse.tile(tile_cover.x, tile_cover.y, tile_cover.z, tilesize=tilesize)
+            tile_path = parent_dir / f'{base_name}_wgs1984quad_x{tile_cover.x}y{tile_cover.y}z{tile_cover.z}.tif'
+            with open(tile_path, 'wb') as f:
+                f.write(tile.render(img_format='GTiff', add_mask=True, compress='LZW', tiled='YES'))
+            tile_paths.append(tile_path)
+
+    tile_paths = remove_empty_tiles(tile_paths)
+
+    return tile_paths
 
 
 def create_browse_and_upload(
     granule: str,
     bucket: str = None,
     bucket_prefix: str = '',
+    tile: bool = False,
     working_dir: Optional[Path] = None,
+    keep_intermediates: bool = False,
 ) -> None:
     """Create browse images for an OPERA S1 RTC granule.
 
@@ -166,17 +231,29 @@ def create_browse_and_upload(
         bucket: AWS S3 bucket for upload the final product(s).
         bucket_prefix: Add a bucket prefix to product(s).
         working_dir: Working directory to store intermediate files.
+        keep_intermediates: Keep intermediate files after processing.
     """
     if working_dir is None:
         working_dir = Path.cwd()
 
     co_pol_path, cross_pol_path = download_data(granule, working_dir)
     browse_path = create_browse_image(co_pol_path, cross_pol_path, working_dir)
-    co_pol_path.unlink()
-    cross_pol_path.unlink()
+
+    if tile:
+        tile_paths = tile_browse_image_wgs84(browse_path)
+        browse_path.unlink()
+        browse_path = tile_paths
+
+    if isinstance(browse_path, Path):
+        browse_path = [browse_path]
+
+    if keep_intermediates:
+        co_pol_path.unlink()
+        cross_pol_path.unlink()
 
     if bucket:
-        upload_file_to_s3(browse_path, bucket, bucket_prefix)
+        for path in browse_path:
+            upload_file_to_s3(path, bucket, bucket_prefix)
 
 
 def main():
@@ -188,6 +265,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--bucket', help='AWS S3 bucket for uploading the final product')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix for product')
+    parser.add_argument('--working-dir', type=Path, default=Path.cwd(), help='Directory where products are created.')
+    parser.add_argument('--keep-intermediates', action='store_false', help='Keep intermediate files after processing')
     parser.add_argument('granule', type=str, help='OPERA S1 RTC granule to create a browse image for.')
     args = parser.parse_args()
 

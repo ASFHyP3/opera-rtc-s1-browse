@@ -220,6 +220,7 @@ def create_browse_and_upload(
     granule: str,
     bucket: str = None,
     bucket_prefix: str = '',
+    tile: bool = False,
     working_dir: Optional[Path] = None,
     keep_intermediates: bool = False,
 ) -> None:
@@ -237,16 +238,21 @@ def create_browse_and_upload(
 
     co_pol_path, cross_pol_path = download_data(granule, working_dir)
     browse_path = create_browse_image(co_pol_path, cross_pol_path, working_dir)
-    tile_paths = tile_browse_image_wgs84(browse_path)
+
+    if tile:
+        browse_path = tile_browse_image_wgs84(browse_path)
+        browse_path.unlink()
+
+    if isinstance(browse_path, Path):
+        browse_path = [browse_path]
 
     if keep_intermediates:
         co_pol_path.unlink()
         cross_pol_path.unlink()
-        browse_path.unlink()
 
     if bucket:
-        for tile_path in tile_paths:
-            upload_file_to_s3(tile_path, bucket, bucket_prefix)
+        for path in browse_path:
+            upload_file_to_s3(path, bucket, bucket_prefix)
 
 
 def main():

@@ -27,9 +27,9 @@ def test_normalize_image_array():
 
 
 def test_create_browse_arry():
-    vv_min, vv_max = 0.02, 0.3
+    vv_min, vv_max = 0, 0.15
     test_vv = np.array([[0, vv_min], [(vv_min + vv_max) / 2, vv_max], [np.nan, np.nan]])
-    vh_min, vh_max = 0.003, 0.08
+    vh_min, vh_max = 0, 0.025
     test_vh = np.array([[np.nan, np.nan], [(vh_min + vh_max) / 2, vh_max], [0, vh_min]])
     output_array = create_browse.create_browse_array(test_vv, test_vh)
     assert output_array.shape == (3, 2, 4)

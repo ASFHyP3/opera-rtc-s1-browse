@@ -100,10 +100,10 @@ def create_browse_array(co_pol_array: np.ndarray, cross_pol_array: np.ndarray) -
        Browse image array.
     """
     co_pol_nodata = ~np.isnan(co_pol_array)
-    co_pol = normalize_image_array(co_pol_array, 0.02, 0.3)
+    co_pol = normalize_image_array(co_pol_array, 0, 0.15)
 
     cross_pol_nodata = ~np.isnan(cross_pol_array)
-    cross_pol = normalize_image_array(cross_pol_array, 0.003, 0.08)
+    cross_pol = normalize_image_array(cross_pol_array, 0, 0.025)
 
     no_data = (np.logical_and(co_pol_nodata, cross_pol_nodata) * 255).astype(np.uint8)
     browse_image = np.stack([co_pol, cross_pol, co_pol, no_data], axis=-1)

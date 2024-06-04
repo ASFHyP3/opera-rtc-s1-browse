@@ -5,7 +5,7 @@ import argparse
 import logging
 import shutil
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Iterable, Optional, Tuple
 
 import asf_search
 import morecantile
@@ -159,7 +159,15 @@ def create_browse_image(co_pol_path: Path, cross_pol_path: Path, working_dir: Pa
     return browse_path
 
 
-def remove_empty_tiles(tile_paths):
+def remove_empty_tiles(tile_paths: Iterable[Path]):
+    """Delete tiles that are entirely nodata.
+
+    Args:
+        tile_paths: List of paths to the tiles.
+
+    Returns:
+        List of paths to the valid tiles.
+    """
     valid_tile_paths = []
     for tile_path in tile_paths:
         ds = gdal.Open(str(tile_path))
@@ -173,7 +181,7 @@ def remove_empty_tiles(tile_paths):
     return valid_tile_paths
 
 
-def tile_browse(browse_path: Path, zoom_level: int = 8):
+def tile_browse_image_wgs84(browse_path: Path, zoom_level: int = 8):
     """Tile a browse image to fit the WGS1984Quad TileMatrixSet.
     Output resolution will always be 0.000274658203125 degrees/pixel
     regardless of the zoom level.
@@ -229,7 +237,7 @@ def create_browse_and_upload(
 
     co_pol_path, cross_pol_path = download_data(granule, working_dir)
     browse_path = create_browse_image(co_pol_path, cross_pol_path, working_dir)
-    tile_paths = tile_browse(browse_path)
+    tile_paths = tile_browse_image_wgs84(browse_path)
 
     if keep_intermediates:
         co_pol_path.unlink()

@@ -240,8 +240,9 @@ def create_browse_and_upload(
     browse_path = create_browse_image(co_pol_path, cross_pol_path, working_dir)
 
     if tile:
-        browse_path = tile_browse_image_wgs84(browse_path)
+        tile_paths = tile_browse_image_wgs84(browse_path)
         browse_path.unlink()
+        browse_path = tile_paths
 
     if isinstance(browse_path, Path):
         browse_path = [browse_path]

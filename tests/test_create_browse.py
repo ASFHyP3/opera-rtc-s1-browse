@@ -61,14 +61,14 @@ def test_tile_browse_image(tmp_path):
 
 
 def test_remove_empty_tiles(tmp_path):
-    test_data = tmp_path / 'test_data.tif'
+    test_data_path = tmp_path / 'test_data.tif'
     test_nodata = tmp_path / 'test_nodata.tif'
-    max_lat, min_lon, pixelsize = 38, -122, 0.000274658203125
+    max_lat, min_lon, pixelsize = 1, 1, 0.1
     transform = [min_lon, pixelsize, 0, max_lat, 0, -1 * pixelsize]
     array = np.ones((10, 10, 4)).astype(np.uint8) * 255
-    create_test_image(test_data, array, transform)
+    create_test_image(test_data_path, array, transform)
     create_test_image(test_nodata, array * 0, transform)
 
-    data_paths = create_browse.remove_empty_tiles([test_data, test_nodata])
+    data_paths = create_browse.remove_empty_tiles([test_data_path, test_nodata])
     assert len(data_paths) == 1
-    assert data_paths[0] == test_data
+    assert data_paths[0] == test_data_path

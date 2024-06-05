@@ -5,10 +5,6 @@ channels:
 dependencies:
   - python>=3.10
   - pip
-  # For running
-  - boto3
-  - earthaccess
-  - gdal
-  # For packaging, and testing
-  - pytest
-  - pytest-cov
+  - libgdal
+  - pip:
+      - --editable .[develop]

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "opera_rtc_s1_browse"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 authors = [
     {name="tools-bot", email="UAF-asf-apd@alaska.edu"},
 ]
@@ -23,7 +23,8 @@ classifiers=[
 dependencies = [
     "boto3",
     "earthaccess",
-    "gdal",
+    "gdal[numpy]",
+    "numpy",
 ]
 dynamic = ["version", "readme"]
 

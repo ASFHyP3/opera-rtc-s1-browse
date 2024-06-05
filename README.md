@@ -20,7 +20,6 @@ These options allow you to specify an AWS S3 bucket path where the browse image 
 1. Ensure that conda is installed on your system (we recommend using [mambaforge](https://github.com/conda-forge/miniforge#mambaforge) to reduce setup times).
 2. Download a local version of the `opera-rtc-s1-browse` repository (`git clone git@github.com:ASFHyP3/opera-rtc-s1-browse.git`)
 3. In the base directory for this project, call `mamba env create -f environment.yml` to create your Python environment and activate it (`mamba activate opera-rtc-s1-browse`)
-4. Finally, install a development version of the package (`python -m pip install -e .`)
 
 To run all commands in sequence use:
 ```bash
@@ -28,7 +27,6 @@ git clone git@github.com:ASFHyP3/opera-rtc-s1-browse.git
 cd opera-rtc-s1-browse
 mamba env create -f environment.yml
 mamba activate opera-rtc-s1-browse
-python -m pip install -e .
 ```
 
 ### Credentials

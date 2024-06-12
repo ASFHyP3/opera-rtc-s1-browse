@@ -7,6 +7,12 @@ Parameters:
     Type: String
     NoEcho: true
 
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+
 Resources:
 
   Bucket:
@@ -21,6 +27,12 @@ Resources:
         - Key: DAR
           Value: "NO"
 
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub "Security group for ${AWS::StackName} lambda function"
+      VpcId: !Ref VpcId
+
   Lambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -30,6 +42,10 @@ Resources:
       Role: !GetAtt LambdaRole.Arn
       Runtime: python3.11
       Timeout: 300
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupId
+        SubnetIds: !Ref SubnetIds
       Environment:
         Variables:
           EARTHDATA_USERNAME: !Ref EarthdataUsername
@@ -54,6 +70,8 @@ Resources:
           Principal:
             Service: lambda.amazonaws.com
           Effect: Allow
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
       Policies:
         - PolicyName: policy
           PolicyDocument:

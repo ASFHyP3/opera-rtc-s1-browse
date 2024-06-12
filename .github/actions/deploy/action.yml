@@ -9,6 +9,10 @@ inputs:
     required: true
   EARTHDATA_PASSWORD:
     required: true
+  VPC_ID:
+    required: true
+  SUBNET_IDS:
+    required: true
   STACK_NAME:
     required: true
   TEMPLATE_BUCKET:
@@ -36,4 +40,6 @@ runs:
           --capabilities CAPABILITY_IAM \
           --parameter-overrides \
               EarthdataUsername="${{ inputs.EARTHDATA_USERNAME }}" \
-              EarthdataPassword="${{ inputs.EARTHDATA_PASSWORD }}"
+              EarthdataPassword="${{ inputs.EARTHDATA_PASSWORD }}" \
+              VpcId="${{ inputs.VPC_ID }}" \
+              SubnetIds="${{ inputs.SUBNET_IDS }}"

@@ -22,5 +22,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           EARTHDATA_USERNAME: ${{ secrets.EARTHDATA_USERNAME }}
           EARTHDATA_PASSWORD: ${{ secrets.EARTHDATA_PASSWORD }}
+          VPC_ID: ${{ secrets.VPC_ID }}
+          SUBNET_IDS: ${{ secrets.SUBNET_IDS }}
           STACK_NAME: opera-rtc-s1-browse-uat
           TEMPLATE_BUCKET: cf-templates-118ylv0o6jp2n-us-west-2

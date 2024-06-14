@@ -3,6 +3,7 @@ opera-rtc-s1-browse processing
 """
 
 import argparse
+import datetime
 import os
 import tempfile
 from pathlib import Path
@@ -15,6 +16,28 @@ from osgeo import gdal
 
 gdal.UseExceptions()
 s3 = boto3.client('s3')
+
+
+def now() -> datetime.datetime:
+    return datetime.datetime.now()
+
+
+def create_metadata_xml(co_pol_path: Path, browse_path: Path) -> Path:
+    info = gdal.Info(str(co_pol_path), format='json')
+    start_time = datetime.datetime.fromisoformat(info["metadata"][""]["ZERO_DOPPLER_START_TIME"][:-1])
+    end_time = datetime.datetime.fromisoformat(info["metadata"][""]["ZERO_DOPPLER_END_TIME"][:-1])
+    content = (
+        '<ImageryMetadata xmlns="http://www.w3.org/2005/Atom" xmlns:georss="http://www.georss.org/georss/10">\n'
+        f'  <ProviderProductId>{browse_path.stem}</ProviderProductId>\n'
+        f'  <ProductionDateTime>{now().isoformat(timespec="seconds")}Z</ProductionDateTime>\n'
+        f'  <DataStartDateTime>{start_time.isoformat(timespec="seconds")}Z</DataStartDateTime>\n'
+        f'  <DataEndDateTime>{end_time.isoformat(timespec="seconds")}Z</DataEndDateTime>\n'
+        f'  <DataDay>{start_time.strftime("%Y%m%d")}</DataDay>\n'
+        '</ImageryMetadata>\n'
+    )
+    xml_path = browse_path.with_suffix('.xml')
+    xml_path.write_text(content)
+    return xml_path
 
 
 def download_data(granule: str, working_dir: Path) -> tuple[Path, Path]:
@@ -160,11 +183,13 @@ def create_browse_and_upload(
 
     co_pol_path, cross_pol_path = download_data(granule, working_dir)
     browse_path = create_browse_image(co_pol_path, cross_pol_path, working_dir)
+    metadata_path = create_metadata_xml(co_pol_path, browse_path)
     co_pol_path.unlink()
     cross_pol_path.unlink()
 
     if bucket:
         s3.upload_file(browse_path, bucket, browse_path.name)
+        s3.upload_file(metadata_path, bucket, browse_path.name)
 
 
 def lambda_handler(event, context):

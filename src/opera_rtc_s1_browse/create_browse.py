@@ -19,7 +19,7 @@ s3 = boto3.client('s3')
 
 
 def now() -> datetime.datetime:
-    return datetime.datetime.now()
+    return datetime.datetime.utcnow()
 
 
 def create_metadata_xml(co_pol_path: Path, browse_path: Path) -> Path:

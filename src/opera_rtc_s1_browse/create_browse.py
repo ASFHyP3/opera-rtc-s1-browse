@@ -44,9 +44,7 @@ def download_data(granule: str, working_dir: Path) -> tuple[Path, Path]:
     return co_pol_path, cross_pol_path
 
 
-def normalize_image_array(
-    input_array: np.ndarray, vmin: float | None = None, vmax: float | None = None
-) -> np.ndarray:
+def normalize_image_array(input_array: np.ndarray, vmin: float, vmax: float) -> np.ndarray:
     """Function to normalize a browse image band.
     Modified from OPERA-ADT/RTC.
 
@@ -59,20 +57,10 @@ def normalize_image_array(
         The normalized array.
     """
     input_array = input_array.astype(float)
-
-    if vmin is None:
-        vmin = np.nanpercentile(input_array, 3)
-
-    if vmax is None:
-        vmax = np.nanpercentile(input_array, 97)
-
-    # gamma correction: 0.5
-    is_not_negative = input_array - vmin >= 0
-    is_negative = input_array - vmin < 0
-    input_array[is_not_negative] = np.sqrt((input_array[is_not_negative] - vmin) / (vmax - vmin))
-    input_array[is_negative] = 0
-    input_array[np.isnan(input_array)] = 0
-    normalized_array = np.round(np.clip(input_array, 0, 1) * 255).astype(np.uint8)
+    amplitude_array = np.sqrt(input_array)
+    scaled_array = (amplitude_array - vmin) / (vmax - vmin)
+    scaled_array[np.isnan(input_array)] = 0
+    normalized_array = np.round(np.clip(scaled_array, 0, 1) * 255).astype(np.uint8)
     return normalized_array
 
 
@@ -87,11 +75,13 @@ def create_browse_array(co_pol_array: np.ndarray, cross_pol_array: np.ndarray) -
     Returns:
        Browse image array.
     """
+    co_pol_range = [0.14, 0.52]
     co_pol_nodata = ~np.isnan(co_pol_array)
-    co_pol = normalize_image_array(co_pol_array, 0, 0.15)
+    co_pol = normalize_image_array(co_pol_array, *co_pol_range)
 
+    cross_pol_range = [0.05, 0.259]
     cross_pol_nodata = ~np.isnan(cross_pol_array)
-    cross_pol = normalize_image_array(cross_pol_array, 0, 0.025)
+    cross_pol = normalize_image_array(cross_pol_array, *cross_pol_range)
 
     no_data = (np.logical_and(co_pol_nodata, cross_pol_nodata) * 255).astype(np.uint8)
     browse_image = np.stack([co_pol, cross_pol, co_pol, no_data], axis=-1)

@@ -117,9 +117,16 @@ def create_browse_image(co_pol_path: Path, cross_pol_path: Path, working_dir: Pa
 
     browse_array = create_browse_array(co_pol, cross_pol)
 
-    tmp_browse_path = working_dir / 'tmp.tif'
+    browse_path = working_dir / f'{co_pol_path.stem[:-3]}_rgb.tif'
     driver = gdal.GetDriverByName('GTiff')
-    browse_ds = driver.Create(str(tmp_browse_path), browse_array.shape[1], browse_array.shape[0], 4, gdal.GDT_Byte)
+    browse_ds = driver.Create(
+        utf8_path=str(browse_path),
+        xsize=browse_array.shape[1],
+        ysize=browse_array.shape[0],
+        bands=4,
+        eType=gdal.GDT_Byte,
+        options={'COMPRESS': 'LZW', 'TILED': 'YES'},
+    )
     browse_ds.SetGeoTransform(co_pol_ds.GetGeoTransform())
     browse_ds.SetProjection(co_pol_ds.GetProjection())
     for i in range(4):
@@ -129,17 +136,6 @@ def create_browse_image(co_pol_path: Path, cross_pol_path: Path, working_dir: Pa
     cross_pol_ds = None
     browse_ds = None
 
-    browse_path = working_dir / f'{co_pol_path.stem[:-3]}_rgb.tif'
-    gdal.Warp(
-        browse_path,
-        tmp_browse_path,
-        dstSRS='+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs',
-        xRes=2.74658203125e-4,
-        yRes=2.74658203125e-4,
-        format='GTiff',
-        creationOptions=['COMPRESS=LZW', 'TILED=YES'],
-    )
-    tmp_browse_path.unlink()
     return browse_path
 
 

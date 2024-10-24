@@ -2,10 +2,6 @@
 
 A tool for creating OPERA RTC Sentinel-1 browse images for [NASA Worldview](https://worldview.earthdata.nasa.gov).
 
-The tool is deployed as an AWS Lambda Function that takes in an OPERA RTC granule name and outputs a browse image to an
-S3 bucket. The tool depends on GDAL; we're leveraging [lambgeo/docker-lambda](https://github.com/lambgeo/docker-lambda)
-to install GDAL in our Lambda deployment package.
-
 ## Usage
 Once installed (see below for details) you can run the tool using the command:
 ```bash
@@ -25,9 +21,6 @@ These options allow you to specify an AWS S3 bucket path where the browse image 
 2. Installing `gdal` via pip requires that `git`, `gcc`, and `g++` are installed on your system.
 3. Download a local version of the `opera-rtc-s1-browse` repository (`git clone git@github.com:ASFHyP3/opera-rtc-s1-browse.git`)
 4. In the base directory for this project, call `mamba env create -f environment.yml` to create your Python environment and activate it (`mamba activate opera-rtc-s1-browse`)
-5. If you encounter `cannot import name '_gdal_array' from 'osgeo'` when running `create_browse`, run
-   `pip install --no-cache --force-reinstall gdal[numpy]=="$(gdal-config --version)"`. See https://pypi.org/project/GDAL/#pip.
-   This issue may resolve itself if/when we upgrade to `gdal==3.9.0`.
 
 To run all commands in sequence use:
 ```bash

@@ -10,10 +10,8 @@ from opera_rtc_s1_browse import create_browse
 
 
 class HarmonyAdapter(harmony_service_lib.BaseHarmonyAdapter):
-
     def process_item(self, item: pystac.Item, source: harmony_service_lib.message.Source | None = None) -> pystac.Item:
-        """
-        Processes a single input item.
+        """Processes a single input item.
 
         Parameters
         ----------
@@ -22,7 +20,7 @@ class HarmonyAdapter(harmony_service_lib.BaseHarmonyAdapter):
         source : harmony_service_lib.message.Source
             the input source defining the variables, if any, to subset from the item
 
-        Returns
+        Returns:
         -------
         pystac.Item
             a STAC catalog whose metadata and assets describe the service output
@@ -33,7 +31,6 @@ class HarmonyAdapter(harmony_service_lib.BaseHarmonyAdapter):
         cross_pol_url = get_asset_url(item, '_VH.tif')
 
         with tempfile.TemporaryDirectory() as temp_dir:
-
             co_pol_filename = harmony_service_lib.util.download(
                 url=co_pol_url,
                 destination_dir=temp_dir,
@@ -81,5 +78,5 @@ def main() -> None:
     harmony_service_lib.run_cli(parser, args, HarmonyAdapter)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

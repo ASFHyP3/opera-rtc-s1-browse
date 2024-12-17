@@ -16,7 +16,7 @@ def normalize_image_array(input_array: np.ndarray, vmin: float, vmax: float) -> 
         vmin: The minimum value to normalize to (mapped to 0).
         vmax: The maximum value to normalize to (mapped to 255).
 
-    Returns
+    Returns:
         The normalized array.
     """
     input_array = input_array.astype(float)
@@ -104,7 +104,7 @@ def main():
     parser.add_argument('cross_pol_path', type=Path, help='Path to the cross-polarized (VH) image')
     args = parser.parse_args()
 
-    create_browse_image(args.co_pol_path, args.cross_pol_path, Path('.'))
+    create_browse_image(args.co_pol_path, args.cross_pol_path, Path())
 
 
 if __name__ == '__main__':

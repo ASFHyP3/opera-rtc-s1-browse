@@ -79,10 +79,11 @@ def test_process_item():
             )
         },
     )
-    with patch('harmony_service_lib.util.download', mock_download), \
-            patch('opera_rtc_s1_browse.create_browse.create_browse_image', mock_create_browse_image), \
-            patch('harmony_service_lib.util.stage', mock_stage):
-
+    with (
+        patch('harmony_service_lib.util.download', mock_download),
+        patch('opera_rtc_s1_browse.create_browse.create_browse_image', mock_create_browse_image),
+        patch('harmony_service_lib.util.stage', mock_stage),
+    ):
         assert adapter.process_item(item).to_dict() == expected_result.to_dict()
 
 

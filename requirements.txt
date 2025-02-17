@@ -1,5 +1,5 @@
 # duplicated in environment.yml
-gdal[numpy]==3.10.1
+gdal[numpy]==3.10.2
 harmony-service-lib==2.5.0
 numpy==2.2.2
 pystac==1.12.1

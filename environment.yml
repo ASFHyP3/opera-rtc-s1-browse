@@ -5,7 +5,7 @@ channels:
 dependencies:
   - python=3.11
   - pip
-  - gdal=3.10.2
+  - gdal=3.10.3
   - numpy=2.1.2
   - pytest=8.3.3
   - pytest-cov=5.0.0

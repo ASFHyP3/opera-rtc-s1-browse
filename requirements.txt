@@ -4,5 +4,5 @@ harmony-service-lib==2.7.0
 numpy==2.2.6
 pystac==1.13.0
 pytest==8.4.0
-pytest-cov==6.1.1
+pytest-cov==6.2.1
 setuptools_scm==8.3.1

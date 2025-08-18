@@ -1,8 +1,8 @@
 # duplicated in environment.yml
-gdal[numpy]==3.11.1
-harmony-service-lib==2.7.0
-numpy==2.3.1
+gdal[numpy]==3.11.3
+harmony-service-lib==2.7.1
+numpy==2.3.2
 pystac==1.13.0
 pytest==8.4.1
 pytest-cov==6.2.1
-setuptools_scm==8.3.1
+setuptools_scm==9.2.0

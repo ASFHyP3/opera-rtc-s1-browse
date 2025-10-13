@@ -5,4 +5,4 @@ numpy==2.3.3
 pystac==1.14.1
 pytest==8.4.2
 pytest-cov==7.0.0
-setuptools_scm==9.2.0
+setuptools_scm==9.2.1

@@ -7,10 +7,10 @@ dependencies:
   - pip
   - gdal=3.12.1
   - numpy=2.4.2
+  - pystac==1.14.3
   - pytest=9.0.2
   - pytest-cov=7.0.0
   - setuptools_scm=9.2.2
   - pip:
       - -r requirements-static.txt
       - harmony-service-lib==2.11.0
-      - pystac==1.14.3

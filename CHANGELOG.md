@@ -8,7 +8,8 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.5.4]
 
-This is a maintenance release that includes various dependency upgrades.
+### Changed
+- Upgraded to Python 3.14 from 3.11
 
 ## [0.5.3]
 

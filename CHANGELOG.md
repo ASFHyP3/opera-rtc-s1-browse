@@ -10,6 +10,7 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 - Upgraded to Python 3.14 from 3.11
+- Specified explicit permissions for all GitHub Actions workflows per https://github.com/ASFHyP3/actions/
 
 ## [0.5.3]
 

@@ -13,24 +13,24 @@ on:
 
 jobs:
   call-pytest-workflow:
-    uses: ASFHyP3/actions/.github/workflows/reusable-pytest.yml@v0.20.0
+    uses: ASFHyP3/actions/.github/workflows/reusable-pytest.yml@v0.21.0
     permissions:
       contents: read
     with:
       local_package_name: opera_rtc_s1_browse
       python_versions: >-
-        ["3.11"]
+        ["3.14"]
 
   call-version-info-workflow:
-    uses: ASFHyP3/actions/.github/workflows/reusable-version-info.yml@v0.20.0
+    uses: ASFHyP3/actions/.github/workflows/reusable-version-info.yml@v0.21.0
     permissions:
       contents: read
     with:
-      python_version: "3.11"
+      python_version: "3.14"
 
   call-docker-ghcr-workflow:
     needs: call-version-info-workflow
-    uses: ASFHyP3/actions/.github/workflows/reusable-docker-ghcr.yml@v0.20.0
+    uses: ASFHyP3/actions/.github/workflows/reusable-docker-ghcr.yml@v0.21.0
     permissions:
       contents: read
       packages: write
